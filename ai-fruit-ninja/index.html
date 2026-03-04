@@ -74,6 +74,23 @@
             color: #ffd700;
         }
         
+        .timer {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+        
+        .timer.warning {
+            color: #ff6b6b;
+            animation: pulse 0.5s infinite;
+        }
+        
         .hand-status {
             margin-top: 10px;
             padding: 10px 20px;
@@ -276,6 +293,8 @@
             <div class="hand-status" id="handStatus">📷 等待摄像头...</div>
         </div>
         
+        <div class="timer" id="timer">60</div>
+        
         <div class="lives" id="lives">
             <div class="life"></div>
             <div class="life"></div>
@@ -341,28 +360,81 @@
         let fruits = [];
         let particles = [];
         let lastSpawnTime = 0;
-        let spawnInterval = 1500;
+        let spawnInterval = 800;
+        let timeLeft = 60;
+        let timerInterval = null;
+        let lastSliceTime = 0;
+        let sliceCountInWindow = 0;
+        
+        // 音效上下文
+        let audioCtx = null;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function playSliceSound() {
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.15);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.15);
+        }
+        
+        function playBombSound() {
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(100, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.5);
+            gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.5);
+        }
         
         // 手势检测状态
         let handPosition = { x: 0, y: 0 };
         let prevHandPosition = { x: 0, y: 0 };
         let handVelocity = 0;
         let handDetected = false;
-        let lastSliceTime = 0;
         
         // 水果类型
         const fruitTypes = [
-            { name: '西瓜', color: '#ff6b6b', innerColor: '#ffcccc', size: 60, points: 10 },
-            { name: '橙子', color: '#ffa502', innerColor: '#ffdd59', size: 50, points: 15 },
-            { name: '苹果', color: '#ff4757', innerColor: '#ffeaa7', size: 45, points: 20 },
-            { name: '柠檬', color: '#ffeaa7', innerColor: '#fdcb6e', size: 40, points: 25 },
-            { name: '葡萄', color: '#a55eea', innerColor: '#d1a3ff', size: 35, points: 30 },
-            { name: '猕猴桃', color: '#7bed9f', innerColor: '#2ed573', size: 40, points: 35 },
-            { name: '火龙果', color: '#ff7f50', innerColor: '#ffffff', size: 55, points: 40 },
-            { name: '椰子', color: '#8B4513', innerColor: '#fffaf0', size: 65, points: 45 }
+            { name: '西瓜', emoji: '🍉', color: '#ff6b6b', innerColor: '#ffcccc', size: 60, points: 10 },
+            { name: '橙子', emoji: '🍊', color: '#ffa502', innerColor: '#ffdd59', size: 50, points: 15 },
+            { name: '苹果', emoji: '🍎', color: '#ff4757', innerColor: '#ffeaa7', size: 45, points: 20 },
+            { name: '柠檬', emoji: '🍋', color: '#ffeaa7', innerColor: '#fdcb6e', size: 40, points: 25 },
+            { name: '葡萄', emoji: '🍇', color: '#a55eea', innerColor: '#d1a3ff', size: 35, points: 30 },
+            { name: '猕猴桃', emoji: '🥝', color: '#7bed9f', innerColor: '#2ed573', size: 40, points: 35 },
+            { name: '火龙果', emoji: '🐉', color: '#ff7f50', innerColor: '#ffffff', size: 55, points: 40 },
+            { name: '椰子', emoji: '🥥', color: '#8B4513', innerColor: '#fffaf0', size: 65, points: 45 },
+            { name: '桃子', emoji: '🍑', color: '#fab1a0', innerColor: '#ffeaa7', size: 45, points: 20 },
+            { name: '梨子', emoji: '🍐', color: '#ffeaa7', innerColor: '#ffffff', size: 45, points: 20 },
+            { name: '菠萝', emoji: '🍍', color: '#fdcb6e', innerColor: '#ffeaa7', size: 55, points: 25 },
+            { name: '芒果', emoji: '🥭', color: '#ff9f43', innerColor: '#ffeaa7', size: 50, points: 25 },
+            { name: '草莓', emoji: '🍓', color: '#ff6b81', innerColor: '#ff4757', size: 35, points: 30 },
+            { name: '蓝莓', emoji: '🫐', color: '#5f27cd', innerColor: '#a55eea', size: 30, points: 35 },
+            { name: '樱桃', emoji: '🍒', color: '#ee5a24', innerColor: '#ff6b6b', size: 35, points: 30 },
+            { name: '柚子', emoji: '🍈', color: '#ffc048', innerColor: '#ffeaa7', size: 55, points: 20 },
+            { name: '番茄', emoji: '🍅', color: '#ff4757', innerColor: '#ff6b6b', size: 40, points: 15 },
+            { name: '黄瓜', emoji: '🥒', color: '#2ed573', innerColor: '#7bed9f', size: 45, points: 15 },
+            { name: '茄子', emoji: '🍆', color: '#574b90', innerColor: '#a55eea', size: 45, points: 20 },
+            { name: '胡萝卜', emoji: '🥕', color: '#ff9f43', innerColor: '#fdcb6e', size: 45, points: 15 }
         ];
         
-        const bomb = { name: '💣', color: '#2d3436', size: 50, points: -50 };
+        const bomb = { name: '💣', emoji: '💣', color: '#2d3436', size: 50, points: -50 };
         
         // MediaPipe Hands
         const hands = new Hands({locateFile: (file) => {
@@ -451,6 +523,7 @@
                                 lives--;
                                 updateLives();
                                 createExplosion(fruit.x, fruit.y, '#2d3436');
+                                playBombSound();
                                 fruits.splice(i, 1);
                                 combo = 0;
                                 updateCombo();
@@ -458,10 +531,27 @@
                                 if (lives <= 0) gameOver();
                             } else {
                                 fruit.sliced = true;
-                                score += fruit.points + combo * 5;
+                                
+                                // 计算同时切多个的奖励
+                                const now = Date.now();
+                                if (now - lastSliceTime < 300) {
+                                    sliceCountInWindow++;
+                                } else {
+                                    sliceCountInWindow = 1;
+                                }
+                                lastSliceTime = now;
+                                
+                                // 基础分 + 连击分 + 同时切多个奖励
+                                let points = (fruit.points || 0) + combo * 5;
+                                if (sliceCountInWindow >= 2) {
+                                    points += sliceCountInWindow * 10;
+                                }
+                                
+                                score += points;
                                 combo++;
                                 updateScore();
                                 updateCombo();
+                                playSliceSound();
                                 createSliceEffect(fruit);
                                 createParticles(fruit.x, fruit.y, fruit.innerColor);
                                 fruits.splice(i, 1);
@@ -494,20 +584,35 @@
         // 生成水果
         function spawnFruit() {
             const isBomb = Math.random() < 0.12;
+            
+            // 随机初始垂直速度 - 有快有慢 (6-16)
+            const baseVy = -(Math.random() * 10 + 6);
+            
+            // 左右边距留出80px
+            const margin = 80;
             const fruit = {
-                x: Math.random() * (canvas.width - 200) + 100,
-                y: canvas.height + 50,
-                vx: (Math.random() - 0.5) * 4,
-                vy: -(Math.random() * 8 + 12),
+                x: Math.random() * (canvas.width - margin * 2) + margin,
+                y: canvas.height + 30,
+                vx: (Math.random() - 0.5) * 2,
+                vy: baseVy,
                 rotation: Math.random() * Math.PI * 2,
-                rotationSpeed: (Math.random() - 0.5) * 0.2,
+                rotationSpeed: (Math.random() - 0.5) * 0.1,
                 size: 0,
                 targetSize: isBomb ? bomb.size : fruitTypes[Math.floor(Math.random() * fruitTypes.length)].size,
                 sliced: false,
                 isBomb: isBomb,
-                type: isBomb ? bomb : fruitTypes[Math.floor(Math.random() * fruitTypes.length)]
+                type: isBomb ? bomb : fruitTypes[Math.floor(Math.random() * fruitTypes.length)],
+                spawnTime: Date.now()
             };
             fruits.push(fruit);
+        }
+        
+        // 一次生成多个水果
+        function spawnMultipleFruits() {
+            const count = Math.floor(Math.random() * 3) + 1;
+            for (let i = 0; i < count; i++) {
+                spawnFruit();
+            }
         }
         
         // 切割效果
@@ -587,9 +692,9 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             if (timestamp - lastSpawnTime > spawnInterval) {
-                spawnFruit();
+                spawnMultipleFruits();
                 lastSpawnTime = timestamp;
-                spawnInterval = Math.max(500, spawnInterval - 10);
+                spawnInterval = Math.max(400, spawnInterval - 5);
             }
             
             // 更新水果
@@ -597,19 +702,24 @@
                 const f = fruits[i];
                 f.x += f.vx;
                 f.y += f.vy;
-                f.vy += 0.3;
+                f.vy += 0.15; // 重力调小
                 f.rotation += f.rotationSpeed;
                 f.size += (f.targetSize - f.size) * 0.1;
                 drawFruit(f);
                 
-                if (f.y > canvas.height + 100) {
+                // 水果最低不能低于屏幕一半高度
+                const minHeight = canvas.height / 2;
+                if (f.vy > 0 && f.y > minHeight) {
                     if (!f.isHalf && !f.isBomb) {
-                        lives--;
-                        updateLives();
                         combo = 0;
                         updateCombo();
-                        if (lives <= 0) gameOver();
                     }
+                    fruits.splice(i, 1);
+                    continue;
+                }
+                
+                // 只对半切水果和炸弹检查是否掉出屏幕
+                if (f.y > canvas.height + 100) {
                     fruits.splice(i, 1);
                 }
             }
@@ -619,7 +729,7 @@
                 const p = particles[i];
                 p.x += p.vx;
                 p.y += p.vy;
-                p.vy += 0.2;
+                p.vy += 0.1; // 粒子重力调小
                 p.life -= p.decay;
                 
                 ctx.globalAlpha = p.life;
@@ -736,17 +846,20 @@
         }
         
         function startGame() {
+            initAudio();
             gameRunning = true;
             score = 0;
             lives = 3;
             combo = 0;
             fruits = [];
             particles = [];
-            spawnInterval = 1500;
+            spawnInterval = 800;
             lastSpawnTime = 0;
+            timeLeft = 60;
             
             updateScore();
             updateCombo();
+            updateTimer();
             
             const livesEl = document.getElementById('lives');
             livesEl.innerHTML = '<div class="life"></div><div class="life"></div><div class="life"></div>';
@@ -754,7 +867,29 @@
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameOverScreen').style.display = 'none';
             
+            // 开始倒计时
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+                if (timeLeft <= 0) {
+                    gameOver();
+                }
+            }, 1000);
+            
             requestAnimationFrame(gameLoop);
+        }
+        
+        function updateTimer() {
+            const timerEl = document.getElementById('timer');
+            if (timerEl) {
+                timerEl.textContent = timeLeft;
+                if (timeLeft <= 10) {
+                    timerEl.classList.add('warning');
+                } else {
+                    timerEl.classList.remove('warning');
+                }
+            }
         }
         
         function restartGame() {
@@ -764,6 +899,7 @@
         
         function gameOver() {
             gameRunning = false;
+            if (timerInterval) clearInterval(timerInterval);
             document.getElementById('finalScore').textContent = score;
             document.getElementById('gameOverScreen').style.display = 'flex';
         }
