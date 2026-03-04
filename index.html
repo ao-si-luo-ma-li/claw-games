@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 游戏中心</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        h1 {
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+        }
+        .game-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .game-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255,255,255,0.15);
+            border-color: #feca57;
+        }
+        .game-icon { font-size: 60px; margin-bottom: 15px; }
+        .game-title { font-size: 22px; font-weight: bold; margin-bottom: 8px; color: #fff; }
+        .game-desc { font-size: 14px; color: #aaa; }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 游戏中心</h1>
+        <p class="subtitle">点击开始畅玩</p>
+        
+        <div class="games-grid">
+            <div class="game-card" onclick="location.href='english-memory-game.html'">
+                <div class="game-icon">🧠</div>
+                <div class="game-title">英文记忆游戏</div>
+                <div class="game-desc">背单词，闯关卡</div>
+            </div>
+            
+            <div class="game-card" onclick="location.href='fruit-ninja-game/index.html'">
+                <div class="game-icon">🍉</div>
+                <div class="game-title">水果忍者</div>
+                <div class="game-desc">切水果，赢高分</div>
+            </div>
+            
+            <div class="game-card" onclick="alert('更多游戏开发中...')">
+                <div class="game-icon">🎯</div>
+                <div class="game-title">更多游戏</div>
+                <div class="game-desc">即将上线</div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            © 2026 游戏中心 | 用 ❤️ 制作
+        </div>
+    </div>
+</body>
+</html>

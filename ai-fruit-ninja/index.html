@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI切水果 - 体感游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #videoContainer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            height: 240px;
+            border: 3px solid #00d9ff;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 217, 255, 0.5);
+            z-index: 100;
+        }
+        
+        #webcam {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #gameCanvas {
+            display: block;
+        }
+        
+        #ui {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .score {
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .score span {
+            color: #ffd700;
+        }
+        
+        .hand-status {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: rgba(0, 217, 255, 0.2);
+            border-radius: 20px;
+            font-size: 18px;
+            border: 2px solid #00d9ff;
+        }
+        
+        .hand-status.detecting {
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+        
+        .hand-status.slicing {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+            animation: pulse 0.3s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        #startScreen, #gameOverScreen, #permissionScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.85);
+            z-index: 200;
+        }
+        
+        #gameOverScreen, #permissionScreen {
+            display: none;
+        }
+        
+        h1 {
+            font-size: 56px;
+            color: #00d9ff;
+            text-shadow: 0 0 20px rgba(0, 217, 255, 0.5);
+            margin-bottom: 20px;
+        }
+        
+        .subtitle {
+            font-size: 20px;
+            color: #aaa;
+            margin-bottom: 30px;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        
+        .camera-preview {
+            width: 320px;
+            height: 240px;
+            border: 3px solid #00d9ff;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        #previewVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        
+        .final-score {
+            font-size: 48px;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 15px 50px;
+            font-size: 22px;
+            background: linear-gradient(45deg, #00d9ff, #00ff88);
+            border: none;
+            border-radius: 50px;
+            color: #1a1a2e;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 6px 20px rgba(0, 217, 255, 0.4);
+        }
+        
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 217, 255, 0.6);
+        }
+        
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        
+        .combo {
+            position: fixed;
+            top: 20px;
+            right: 360px;
+            font-size: 32px;
+            color: #ff6b6b;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .combo.show {
+            opacity: 1;
+        }
+        
+        .lives {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+        }
+        
+        .life {
+            width: 35px;
+            height: 35px;
+            background: #00d9ff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.6);
+            transition: all 0.3s;
+        }
+        
+        .life.lost {
+            background: #333;
+            box-shadow: none;
+            transform: scale(0.8);
+        }
+        
+        .slice-indicator {
+            position: fixed;
+            pointer-events: none;
+            z-index: 50;
+        }
+        
+        .slice-line {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #00d9ff, #fff, #00d9ff, transparent);
+            border-radius: 2px;
+            animation: sliceFade 0.3s ease-out forwards;
+        }
+        
+        @keyframes sliceFade {
+            0% { opacity: 1; transform: scaleX(1); }
+            100% { opacity: 0; transform: scaleX(1.5); }
+        }
+        
+        #instructions {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.7);
+            font-size: 18px;
+            text-align: center;
+        }
+        
+        .loading {
+            color: #00d9ff;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        
+        .error-msg {
+            color: #ff6b6b;
+            font-size: 18px;
+            margin: 10px 0;
+            text-align: center;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="videoContainer">
+            <video id="webcam" autoplay playsinline></video>
+            <canvas id="poseCanvas"></canvas>
+        </div>
+        
+        <div id="ui">
+            <div class="score">得分: <span id="scoreValue">0</span></div>
+            <div class="hand-status" id="handStatus">📷 等待摄像头...</div>
+        </div>
+        
+        <div class="lives" id="lives">
+            <div class="life"></div>
+            <div class="life"></div>
+            <div class="life"></div>
+        </div>
+        
+        <div class="combo" id="combo">连击 x<span id="comboValue">0</span></div>
+    </div>
+    
+    <div id="permissionScreen">
+        <h1>🤚 AI切水果</h1>
+        <p class="subtitle">挥动手臂来切水果！<br>需要使用摄像头捕捉你的动作</p>
+        <div class="camera-preview">
+            <video id="previewVideo" autoplay playsinline muted></video>
+        </div>
+        <button id="startBtn" onclick="requestCamera()">开启摄像头</button>
+        <div class="loading" id="loadingMsg" style="display: none;">正在加载AI模型...</div>
+        <div class="error-msg" id="errorMsg"></div>
+    </div>
+    
+    <div id="startScreen" style="display: none;">
+        <h1>🤚 AI切水果</h1>
+        <p class="subtitle">挥动手臂切水果！<br>挥动右手来切割</p>
+        <button onclick="startGame()">开始游戏</button>
+    </div>
+    
+    <div id="gameOverScreen">
+        <h1>游戏结束</h1>
+        <p class="final-score">最终得分: <span id="finalScore">0</span></p>
+        <button onclick="restartGame()">再来一局</button>
+    </div>
+    
+    <div id="instructions">挥动右手臂切水果 · 炸弹会扣命 · 漏掉3个水果游戏结束</div>
+
+    <!-- MediaPipe -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <script>
+        // 画布设置
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const poseCanvas = document.getElementById('poseCanvas');
+        const poseCtx = poseCanvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            poseCanvas.width = 320;
+            poseCanvas.height = 240;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 游戏状态
+        let gameRunning = false;
+        let score = 0;
+        let lives = 3;
+        let combo = 0;
+        let fruits = [];
+        let particles = [];
+        let lastSpawnTime = 0;
+        let spawnInterval = 1500;
+        
+        // 手势检测状态
+        let handPosition = { x: 0, y: 0 };
+        let prevHandPosition = { x: 0, y: 0 };
+        let handVelocity = 0;
+        let handDetected = false;
+        let lastSliceTime = 0;
+        
+        // 水果类型
+        const fruitTypes = [
+            { name: '西瓜', color: '#ff6b6b', innerColor: '#ffcccc', size: 60, points: 10 },
+            { name: '橙子', color: '#ffa502', innerColor: '#ffdd59', size: 50, points: 15 },
+            { name: '苹果', color: '#ff4757', innerColor: '#ffeaa7', size: 45, points: 20 },
+            { name: '柠檬', color: '#ffeaa7', innerColor: '#fdcb6e', size: 40, points: 25 },
+            { name: '葡萄', color: '#a55eea', innerColor: '#d1a3ff', size: 35, points: 30 },
+            { name: '猕猴桃', color: '#7bed9f', innerColor: '#2ed573', size: 40, points: 35 },
+            { name: '火龙果', color: '#ff7f50', innerColor: '#ffffff', size: 55, points: 40 },
+            { name: '椰子', color: '#8B4513', innerColor: '#fffaf0', size: 65, points: 45 }
+        ];
+        
+        const bomb = { name: '💣', color: '#2d3436', size: 50, points: -50 };
+        
+        // MediaPipe Hands
+        const hands = new Hands({locateFile: (file) => {
+            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }});
+        
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.5
+        });
+        
+        hands.onResults(onHandsResults);
+        
+        // 手势结果处理
+        function onHandsResults(results) {
+            poseCtx.clearRect(0, 0, poseCanvas.width, poseCanvas.height);
+            
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                handDetected = true;
+                const landmarks = results.multiHandLandmarks[0];
+                
+                // 获取手腕和指尖位置
+                const wrist = landmarks[0];
+                const indexTip = landmarks[8];
+                
+                // 使用手腕位置
+                const x = indexTip.x * canvas.width;
+                const y = indexTip.y * canvas.height;
+                
+                prevHandPosition = { ...handPosition };
+                handPosition = { x, y };
+                
+                // 计算速度
+                const dx = handPosition.x - prevHandPosition.x;
+                const dy = handPosition.y - prevHandPosition.y;
+                handVelocity = Math.sqrt(dx * dx + dy * dy);
+                
+                // 绘制手部关键点
+                drawConnectors(poseCtx, results.multiHandLandmarks[0], HAND_CONNECTORS, 
+                    {color: '#00d9ff', lineWidth: 2});
+                drawLandmarks(poseCtx, results.multiHandLandmarks[0], 
+                    {color: '#ff6b6b', lineWidth: 1, radius: 3});
+                
+                // 更新状态
+                const statusEl = document.getElementById('handStatus');
+                if (handVelocity > 50) {
+                    statusEl.textContent = '⚡ 切割中!';
+                    statusEl.className = 'hand-status slicing';
+                    checkSlice();
+                } else {
+                    statusEl.textContent = '✋ 手势已检测';
+                    statusEl.className = 'hand-status detecting';
+                }
+            } else {
+                handDetected = false;
+                handVelocity = 0;
+                const statusEl = document.getElementById('handStatus');
+                statusEl.textContent = '📷 等待手势...';
+                statusEl.className = 'hand-status';
+            }
+        }
+        
+        // 切割检测
+        function checkSlice() {
+            const now = Date.now();
+            if (now - lastSliceTime < 200) return; // 防止频繁触发
+            
+            if (handVelocity > 40) {
+                lastSliceTime = now;
+                
+                // 创建切割轨迹效果
+                createSliceTrail(handPosition.x, handPosition.y, prevHandPosition.x, prevHandPosition.y);
+                
+                // 检测切割到的水果
+                for (let i = fruits.length - 1; i >= 0; i--) {
+                    const fruit = fruits[i];
+                    if (!fruit.sliced) {
+                        const dx = fruit.x - handPosition.x;
+                        const dy = fruit.y - handPosition.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < fruit.size + 30) {
+                            if (fruit.isBomb) {
+                                lives--;
+                                updateLives();
+                                createExplosion(fruit.x, fruit.y, '#2d3436');
+                                fruits.splice(i, 1);
+                                combo = 0;
+                                updateCombo();
+                                
+                                if (lives <= 0) gameOver();
+                            } else {
+                                fruit.sliced = true;
+                                score += fruit.points + combo * 5;
+                                combo++;
+                                updateScore();
+                                updateCombo();
+                                createSliceEffect(fruit);
+                                createParticles(fruit.x, fruit.y, fruit.innerColor);
+                                fruits.splice(i, 1);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // 创建切割轨迹
+        function createSliceTrail(x1, y1, x2, y2) {
+            const container = document.getElementById('gameContainer');
+            const line = document.createElement('div');
+            line.className = 'slice-line';
+            
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            
+            line.style.width = length + 'px';
+            line.style.left = x1 + 'px';
+            line.style.top = y1 + 'px';
+            line.style.transform = `rotate(${angle}rad)`;
+            
+            container.appendChild(line);
+            
+            setTimeout(() => line.remove(), 300);
+        }
+        
+        // 生成水果
+        function spawnFruit() {
+            const isBomb = Math.random() < 0.12;
+            const fruit = {
+                x: Math.random() * (canvas.width - 200) + 100,
+                y: canvas.height + 50,
+                vx: (Math.random() - 0.5) * 4,
+                vy: -(Math.random() * 8 + 12),
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.2,
+                size: 0,
+                targetSize: isBomb ? bomb.size : fruitTypes[Math.floor(Math.random() * fruitTypes.length)].size,
+                sliced: false,
+                isBomb: isBomb,
+                type: isBomb ? bomb : fruitTypes[Math.floor(Math.random() * fruitTypes.length)]
+            };
+            fruits.push(fruit);
+        }
+        
+        // 切割效果
+        function createSliceEffect(fruit) {
+            const half1 = {
+                x: fruit.x, y: fruit.y,
+                vx: fruit.vx - 3, vy: fruit.vy,
+                rotation: fruit.rotation, rotationSpeed: -0.1,
+                size: fruit.size, color: fruit.type.color,
+                innerColor: fruit.type.innerColor,
+                isHalf: true, direction: -1
+            };
+            const half2 = {
+                x: fruit.x, y: fruit.y,
+                vx: fruit.vx + 3, vy: fruit.vy,
+                rotation: fruit.rotation, rotationSpeed: 0.1,
+                size: fruit.size, color: fruit.type.color,
+                innerColor: fruit.type.innerColor,
+                isHalf: true, direction: 1
+            };
+            fruits.push(half1, half2);
+        }
+        
+        // 粒子效果
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    size: Math.random() * 8 + 4,
+                    color, life: 1,
+                    decay: Math.random() * 0.02 + 0.02
+                });
+            }
+        }
+        
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 30; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 0.5) * 20,
+                    size: Math.random() * 12 + 6,
+                    color, life: 1,
+                    decay: Math.random() * 0.03 + 0.02
+                });
+            }
+        }
+        
+        // 更新UI
+        function updateScore() {
+            document.getElementById('scoreValue').textContent = score;
+        }
+        
+        function updateCombo() {
+            const comboEl = document.getElementById('combo');
+            document.getElementById('comboValue').textContent = combo;
+            if (combo > 1) {
+                comboEl.classList.add('show');
+                setTimeout(() => comboEl.classList.remove('show'), 1000);
+            }
+        }
+        
+        function updateLives() {
+            const livesEl = document.getElementById('lives');
+            const lifeElements = livesEl.querySelectorAll('.life');
+            lifeElements.forEach((el, i) => {
+                if (i >= lives) el.classList.add('lost');
+            });
+        }
+        
+        // 游戏循环
+        function gameLoop(timestamp) {
+            if (!gameRunning) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (timestamp - lastSpawnTime > spawnInterval) {
+                spawnFruit();
+                lastSpawnTime = timestamp;
+                spawnInterval = Math.max(500, spawnInterval - 10);
+            }
+            
+            // 更新水果
+            for (let i = fruits.length - 1; i >= 0; i--) {
+                const f = fruits[i];
+                f.x += f.vx;
+                f.y += f.vy;
+                f.vy += 0.3;
+                f.rotation += f.rotationSpeed;
+                f.size += (f.targetSize - f.size) * 0.1;
+                drawFruit(f);
+                
+                if (f.y > canvas.height + 100) {
+                    if (!f.isHalf && !f.isBomb) {
+                        lives--;
+                        updateLives();
+                        combo = 0;
+                        updateCombo();
+                        if (lives <= 0) gameOver();
+                    }
+                    fruits.splice(i, 1);
+                }
+            }
+            
+            // 更新粒子
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.2;
+                p.life -= p.decay;
+                
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function drawFruit(fruit) {
+            ctx.save();
+            ctx.translate(fruit.x, fruit.y);
+            ctx.rotate(fruit.rotation);
+            
+            if (fruit.isHalf) {
+                ctx.beginPath();
+                ctx.arc(0, 0, fruit.size, fruit.direction === -1 ? -Math.PI/2 : Math.PI/2, fruit.direction === -1 ? Math.PI/2 : Math.PI*1.5);
+                ctx.closePath();
+                ctx.fillStyle = fruit.color;
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(0, 0, fruit.size * 0.7, fruit.direction === -1 ? -Math.PI/2 : Math.PI/2, fruit.direction === -1 ? Math.PI/2 : Math.PI*1.5);
+                ctx.closePath();
+                ctx.fillStyle = fruit.innerColor;
+                ctx.fill();
+            } else if (fruit.isBomb) {
+                ctx.beginPath();
+                ctx.arc(0, 0, fruit.size, 0, Math.PI * 2);
+                ctx.fillStyle = '#2d3436';
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(-fruit.size * 0.3, -fruit.size * 0.3, fruit.size * 0.2, 0, Math.PI * 2);
+                ctx.fillStyle = '#636e72';
+                ctx.fill();
+                
+                ctx.fillStyle = '#e17055';
+                ctx.fillRect(-3, -fruit.size - 10, 6, 15);
+                
+                ctx.font = '20px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('💣', 0, 0);
+            } else {
+                ctx.beginPath();
+                ctx.arc(0, 0, fruit.size, 0, Math.PI * 2);
+                ctx.fillStyle = fruit.type.color;
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(-fruit.size * 0.3, -fruit.size * 0.3, fruit.size * 0.2, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.fill();
+                
+                ctx.fillStyle = '#2d3436';
+                ctx.fillRect(-3, -fruit.size - 8, 6, 12);
+            }
+            ctx.restore();
+        }
+        
+        // 摄像头和游戏控制
+        let camera = null;
+        
+        async function requestCamera() {
+            const errorEl = document.getElementById('errorMsg');
+            const loadingEl = document.getElementById('loadingMsg');
+            const startBtn = document.getElementById('startBtn');
+            
+            try {
+                startBtn.disabled = true;
+                startBtn.textContent = '请求权限中...';
+                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 320, height: 240, facingMode: 'user' }
+                });
+                
+                const video = document.getElementById('previewVideo');
+                video.srcObject = stream;
+                
+                loadingEl.style.display = 'block';
+                startBtn.textContent = '加载AI模型...';
+                
+                await hands.initialize();
+                
+                // 切换到正式视频
+                const gameVideo = document.getElementById('webcam');
+                gameVideo.srcObject = stream;
+                
+                camera = new Camera(gameVideo, {
+                    onFrame: async () => {
+                        await hands.send({image: gameVideo});
+                    },
+                    width: 320,
+                    height: 240
+                });
+                camera.start();
+                
+                loadingEl.style.display = 'none';
+                document.getElementById('permissionScreen').style.display = 'none';
+                document.getElementById('startScreen').style.display = 'flex';
+                
+            } catch (err) {
+                errorEl.textContent = '无法访问摄像头: ' + err.message;
+                startBtn.disabled = false;
+                startBtn.textContent = '重试';
+            }
+        }
+        
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            lives = 3;
+            combo = 0;
+            fruits = [];
+            particles = [];
+            spawnInterval = 1500;
+            lastSpawnTime = 0;
+            
+            updateScore();
+            updateCombo();
+            
+            const livesEl = document.getElementById('lives');
+            livesEl.innerHTML = '<div class="life"></div><div class="life"></div><div class="life"></div>';
+            
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameOverScreen').style.display = 'none';
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function restartGame() {
+            document.getElementById('gameOverScreen').style.display = 'none';
+            startGame();
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>

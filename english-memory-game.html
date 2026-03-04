@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Learning Game</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Comic Sans MS', cursive; background: linear-gradient(135deg, #E0F7FA, #B2EBF2); min-height: 100vh; }
+        .screen { display: none; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+        .screen.active { display: flex; }
+        .title { font-size: 42px; color: #00ACC1; margin: 20px 0; }
+        .mascot { font-size: 90px; animation: wiggle 2s infinite; }
+        @keyframes wiggle { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+        .menu-btn { width: 280px; height: 70px; font-size: 22px; border: none; border-radius: 20px; cursor: pointer; margin: 10px; font-weight: bold; color: white; }
+        .btn-start { background: linear-gradient(#4CAF50, #43A047); }
+        .btn-review { background: linear-gradient(#FF7043, #F4511E); }
+        .btn-stats { background: linear-gradient(#7E57C2, #5E35B1); }
+        .level-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-width: 400px; margin-top: 20px; }
+        .level-card { background: white; border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; border: 4px solid transparent; }
+        .level-card:hover { transform: translateY(-5px); }
+        .level-card.locked { opacity: 0.5; cursor: not-allowed; }
+        .level-card.locked:hover { transform: none; }
+        .level-card.completed { border-color: #4CAF50; }
+        .level-card.current { border-color: #FF9800; }
+        .level-number { font-size: 32px; font-weight: bold; color: #00ACC1; }
+        .level-name { font-size: 16px; color: #666; margin-top: 5px; }
+        .level-words { font-size: 12px; color: #999; margin-top: 8px; }
+        .game-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center; }
+        .level-badge { background: #00ACC1; color: white; padding: 8px 20px; border-radius: 20px; font-size: 18px; }
+        .speak-btn { width: 60px; height: 60px; font-size: 30px; background: linear-gradient(#FF7043, #F4511E); border: none; border-radius: 50%; cursor: pointer; }
+        .target-display { background: white; padding: 15px 30px; border-radius: 25px; display: flex; align-items: center; gap: 15px; }
+        .target-emoji { font-size: 40px; }
+        .target-word { font-size: 28px; color: #00ACC1; font-weight: bold; }
+        .progress-bar { width: 100%; max-width: 500px; height: 12px; background: #E0E0E0; border-radius: 6px; margin: 15px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(#4CAF50, #8BC34A); border-radius: 6px; transition: width 0.5s; }
+        .progress-text { font-size: 16px; color: #00838F; margin-bottom: 10px; }
+        .target-list { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 500px; margin-bottom: 15px; }
+        .target-item { padding: 5px 12px; background: white; border-radius: 15px; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+        .target-item.found { background: #4CAF50; color: white; }
+        .target-item.current { border: 2px solid #FF9800; }
+        .cards-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 500px; width: 100%; padding: 10px; }
+        .card { aspect-ratio: 1; perspective: 1000px; cursor: pointer; }
+        .card-inner { position: relative; width: 100%; height: 100%; transition: transform 0.5s; transform-style: preserve-3d; }
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+        .card.matched .card-inner { animation: match 0.5s; }
+        @keyframes match { 0% { transform: rotateY(180deg) scale(1); } 50% { transform: rotateY(180deg) scale(1.15); } 100% { transform: rotateY(180deg) scale(1); } }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 35px; box-shadow: 0 4px 15px rgba(0,0,0,0.12); }
+        .card-front { background: linear-gradient(#7E57C2, #5E35B1); color: white; }
+        .card-back { background: white; transform: rotateY(180deg); border: 3px solid #B2EBF2; }
+        .card-back .emoji { font-size: 38px; }
+        .card-back .word { font-size: 14px; color: #333; font-weight: bold; }
+        .feedback { position: fixed; top: 20%; left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 20px; font-size: 20px; font-weight: bold; z-index: 100; display: none; }
+        .feedback.success { background: #4CAF50; color: white; }
+        .feedback.error { background: #F44336; color: white; }
+        .stats-container { background: white; border-radius: 20px; padding: 20px; width: 100%; max-width: 400px; margin-top: 20px; }
+        .stats-title { font-size: 20px; color: #00ACC1; margin-bottom: 15px; text-align: center; }
+        .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .win-emoji { font-size: 100px; animation: bounce 0.6s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .back-btn { margin-top: 20px; padding: 15px 30px; font-size: 18px; background: #FF7043; color: white; border: none; border-radius: 15px; cursor: pointer; }
+        @media (max-width: 500px) { .title { font-size: 28px; } .cards-container { gap: 8px; } }
+    </style>
+</head>
+<body>
+    <div id="start-screen" class="screen active">
+        <div class="mascot">🦉</div>
+        <h1 class="title">English Learning</h1>
+        <button class="menu-btn btn-start" id="btn-start">Play Game</button>
+        <button class="menu-btn btn-review" id="btn-review">Review Words</button>
+        <button class="menu-btn btn-stats" id="btn-stats">My Progress</button>
+    </div>
+
+    <div id="level-screen" class="screen">
+        <h1 class="title">Select Level</h1>
+        <div class="level-grid" id="levelGrid"></div>
+        <button class="back-btn" id="btn-back">Back</button>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div class="game-header">
+            <div class="level-badge" id="levelBadge">Level 1</div>
+            <button class="speak-btn" id="speakBtn">🔊</button>
+            <div class="target-display">
+                <span class="target-emoji" id="targetEmoji">🍎</span>
+                <span class="target-word" id="targetWord">apple</span>
+            </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+        <div class="progress-text" id="progressText">0 / 6</div>
+        <div class="target-list" id="targetList"></div>
+        <div class="cards-container" id="cardsContainer"></div>
+    </div>
+
+    <div id="stats-screen" class="screen">
+        <h1 class="title">My Progress</h1>
+        <div class="stats-container" id="statsContainer"></div>
+        <button class="back-btn" id="btn-back-stats">Back</button>
+    </div>
+
+    <div id="win-screen" class="screen">
+        <div class="win-emoji">🎉</div>
+        <h1 class="title">Great Job!</h1>
+        <div class="stats-container" id="winStats"></div>
+        <button class="menu-btn btn-start" id="btn-next">Next Level</button>
+        <button class="back-btn" id="btn-home">Home</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <script>
+        // Vocabulary data
+        const vocabulary = {
+            1: { name: 'Colors', items: [
+                { emoji: '🔴', word: 'red' }, { emoji: '🔵', word: 'blue' }, { emoji: '🟡', word: 'yellow' },
+                { emoji: '🟢', word: 'green' }, { emoji: '🟠', word: 'orange' }, { emoji: '🟣', word: 'purple' }
+            ]},
+            2: { name: 'Fruits', items: [
+                { emoji: '🍎', word: 'apple' }, { emoji: '🍌', word: 'banana' }, { emoji: '🍊', word: 'orange' },
+                { emoji: '🍇', word: 'grape' }, { emoji: '🍓', word: 'strawberry' }, { emoji: '🍉', word: 'watermelon' }
+            ]},
+            3: { name: 'Animals', items: [
+                { emoji: '🐕', word: 'dog' }, { emoji: '🐱', word: 'cat' }, { emoji: '🐰', word: 'rabbit' },
+                { emoji: '🐼', word: 'panda' }, { emoji: '🦁', word: 'lion' }, { emoji: '🐘', word: 'elephant' }
+            ]},
+            4: { name: 'Toys', items: [
+                { emoji: '⚽', word: 'ball' }, { emoji: '🧸', word: 'teddy' }, { emoji: '🚗', word: 'car' },
+                { emoji: '🎨', word: 'crayon' }, { emoji: '🧩', word: 'puzzle' }, { emoji: '🎈', word: 'balloon' }
+            ]},
+            5: { name: 'Food', items: [
+                { emoji: '🥛', word: 'milk' }, { emoji: '🥚', word: 'egg' }, { emoji: '🍞', word: 'bread' },
+                { emoji: '🍰', word: 'cake' }, { emoji: '🍦', word: 'ice cream' }, { emoji: '🍕', word: 'pizza' }
+            ]},
+            6: { name: 'Nature', items: [
+                { emoji: '☀️', word: 'sun' }, { emoji: '🌙', word: 'moon' }, { emoji: '⭐', word: 'star' },
+                { emoji: '☁️', word: 'cloud' }, { emoji: '🌧️', word: 'rain' }, { emoji: '🌸', word: 'flower' }
+            ]},
+            7: { name: 'Body', items: [
+                { emoji: '👤', word: 'head' }, { emoji: '👀', word: 'eye' }, { emoji: '👃', word: 'nose' },
+                { emoji: '👄', word: 'mouth' }, { emoji: '✋', word: 'hand' }, { emoji: '🦶', word: 'foot' }
+            ]},
+            8: { name: 'Home', items: [
+                { emoji: '🏠', word: 'house' }, { emoji: '🚪', word: 'door' }, { emoji: '🪟', word: 'window' },
+                { emoji: '🪑', word: 'chair' }, { emoji: '🛏️', word: 'bed' }, { emoji: '🕰️', word: 'clock' }
+            ]},
+            9: { name: 'Actions', items: [
+                { emoji: '🍽️', word: 'eat' }, { emoji: '🥤', word: 'drink' }, { emoji: '🏃', word: 'run' },
+                { emoji: '🦘', word: 'jump' }, { emoji: '🧘', word: 'sit' }, { emoji: '🚶', word: 'walk' }
+            ]},
+            10: { name: 'Phrases', items: [
+                { emoji: '❤️', word: 'I love you' }, { emoji: '🙏', word: 'thank you' }, { emoji: '🌞', word: 'good morning' },
+                { emoji: '😊', word: 'how are you' }, { emoji: '🙂', word: 'I am happy' }, { emoji: '❓', word: 'what is this' }
+            ]}
+        };
+
+        let currentLevel = 1, gameItems = [], currentIndex = 0, foundItems = [], canFlip = true, isReviewMode = false;
+        const synth = window.speechSynthesis;
+
+        function loadProgress() {
+            try {
+                const data = localStorage.getItem('englishGameProgress');
+                return data ? JSON.parse(data) : { unlockedLevel: 1, learnedWords: {}, todayReview: 0, lastReviewDate: null };
+            } catch (e) {
+                return { unlockedLevel: 1, learnedWords: {}, todayReview: 0, lastReviewDate: null };
+            }
+        }
+
+        function saveProgress(progress) {
+            try {
+                localStorage.setItem('englishGameProgress', JSON.stringify(progress));
+            } catch (e) {
+                console.error('Cannot save progress:', e);
+            }
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showLevelSelect() {
+            const progress = loadProgress();
+            console.log('Loaded progress, unlockedLevel:', progress.unlockedLevel);
+            const grid = document.getElementById('levelGrid');
+            grid.innerHTML = '';
+            Object.keys(vocabulary).forEach(level => {
+                const levelData = vocabulary[level];
+                const isUnlocked = level <= progress.unlockedLevel;
+                const isCompleted = level < progress.unlockedLevel;
+                const card = document.createElement('div');
+                card.className = 'level-card ' + (isUnlocked ? '' : 'locked ') + (isCompleted ? 'completed' : '') + (level == progress.unlockedLevel ? ' current' : '');
+                card.innerHTML = `<div class="level-number">Level ${level}</div><div class="level-name">${levelData.name}</div><div class="level-words">${levelData.items.length} words</div>`;
+                if (isUnlocked) card.onclick = () => startGame(parseInt(level));
+                grid.appendChild(card);
+            });
+            showScreen('level-screen');
+        }
+
+        function showStats() {
+            const progress = loadProgress();
+            const learned = Object.keys(progress.learnedWords).length;
+            const mastered = Object.values(progress.learnedWords).filter(w => w.level >= 4).length;
+            document.getElementById('statsContainer').innerHTML = `<div class="stats-title">Statistics</div><div class="stat-row"><span>Unlocked Levels</span><span>${progress.unlockedLevel} / ${Object.keys(vocabulary).length}</span></div><div class="stat-row"><span>Learned Words</span><span>${learned}</span></div><div class="stat-row"><span>Mastered</span><span>${mastered}</span></div><div class="stat-row"><span>Today Review</span><span>${progress.todayReview}</span></div>`;
+            showScreen('stats-screen');
+        }
+
+        function showReview() {
+            const progress = loadProgress();
+            const now = Date.now();
+            const reviewWords = Object.entries(progress.learnedWords).filter(([word, data]) => data.nextReview <= now && data.level < 5).sort((a, b) => a[1].nextReview - b[1].nextReview).slice(0, 6);
+            if (reviewWords.length === 0) { alert('Great! No words to review today!'); return; }
+            isReviewMode = true;
+            gameItems = reviewWords.map(([word]) => findWord(word)).filter(Boolean);
+            const allWords = Object.values(vocabulary).flatMap(l => l.items);
+            const fillers = allWords.filter(i => !gameItems.find(g => g.word === i.word)).sort(() => Math.random() - 0.5).slice(0, 6);
+            gameItems = [...gameItems, ...fillers].sort(() => Math.random() - 0.5);
+            currentIndex = 0; foundItems = []; canFlip = true;
+            document.getElementById('levelBadge').textContent = 'Review';
+            renderCards(); updateProgress(); showScreen('game-screen');
+            setTimeout(speakCurrentWord, 500);
+        }
+
+        function findWord(word) { for (const level of Object.values(vocabulary)) { const found = level.items.find(i => i.word.toLowerCase() === word.toLowerCase()); if (found) return found; } return null; }
+
+        function startGame(level) {
+            isReviewMode = false; currentLevel = level;
+            const levelData = vocabulary[level];
+            const correctItems = [...levelData.items];
+            const allItems = Object.values(vocabulary).flatMap(l => l.items);
+            const fillers = allItems.filter(i => !correctItems.find(c => c.word === i.word)).sort(() => Math.random() - 0.5).slice(0, levelData.items.length);
+            gameItems = [...correctItems, ...fillers].sort(() => Math.random() - 0.5);
+            currentIndex = 0; foundItems = []; canFlip = true;
+            document.getElementById('levelBadge').textContent = 'Level ' + level;
+            renderCards(); updateProgress(); showScreen('game-screen');
+            setTimeout(speakCurrentWord, 500);
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+            gameItems.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => flipCard(card, index);
+                card.innerHTML = `<div class="card-inner"><div class="card-face card-front">❓</div><div class="card-face card-back"><span class="emoji">${item.emoji}</span><span class="word">${item.word}</span></div></div>`;
+                container.appendChild(card);
+            });
+        }
+
+        function flipCard(card, index) {
+            if (!canFlip || card.classList.contains('flipped')) return;
+            card.classList.add('flipped');
+            const flippedItem = gameItems[index];
+            const targetItem = isReviewMode ? gameItems[foundItems.length] : vocabulary[currentLevel].items[currentIndex];
+            if (flippedItem.word.toLowerCase() === targetItem.word.toLowerCase()) {
+                showFeedback('Great!', 'success');
+                card.classList.add('matched');
+                if (isReviewMode) updateWordProgress(flippedItem.word, true);
+                foundItems.push(flippedItem.word.toLowerCase());
+                if (!isReviewMode) currentIndex++;
+                speakWord(flippedItem.word, true);
+                updateProgress();
+                if (!isReviewMode && foundItems.length >= vocabulary[currentLevel].items.length) { setTimeout(() => levelComplete(), 1500); }
+                else if (isReviewMode && foundItems.length >= 6) { setTimeout(() => showScreen('start-screen'), 1500); }
+                else { canFlip = false; setTimeout(() => { canFlip = true; if (!isReviewMode) speakCurrentWord(); }, 2000); }
+            } else {
+                showFeedback('Try again!', 'error');
+                speakError(flippedItem.word, targetItem.word);
+                if (isReviewMode) updateWordProgress(flippedItem.word, false);
+                canFlip = false;
+                setTimeout(() => { card.classList.remove('flipped'); canFlip = true; }, 2000);
+            }
+        }
+
+        function updateWordProgress(word, correct) {
+            const progress = loadProgress();
+            if (!progress.learnedWords[word]) progress.learnedWords[word] = { level: 0, nextReview: Date.now() };
+            const data = progress.learnedWords[word];
+            data.level = correct ? Math.min(data.level + 1, 5) : Math.max(data.level - 1, 0);
+            data.nextReview = Date.now() + Math.pow(2, data.level) * 24 * 60 * 60 * 1000;
+            const today = new Date().toDateString();
+            if (progress.lastReviewDate !== today) { progress.todayReview = 0; progress.lastReviewDate = today; }
+            progress.todayReview++;
+            saveProgress(progress);
+        }
+
+        function levelComplete() {
+            const progress = loadProgress();
+            vocabulary[currentLevel].items.forEach(item => { if (!progress.learnedWords[item.word]) progress.learnedWords[item.word] = { level: 1, nextReview: Date.now() + 24 * 60 * 60 * 1000 }; });
+            if (currentLevel >= progress.unlockedLevel && currentLevel < Object.keys(vocabulary).length) {
+                progress.unlockedLevel = currentLevel + 1;
+                console.log('Level completed, new unlockedLevel:', progress.unlockedLevel);
+            }
+            saveProgress(progress);
+            
+            showFeedback('Level Complete!', 'success');
+            
+            // 自动进入下一关
+            setTimeout(() => {
+                if (currentLevel < Object.keys(vocabulary).length) {
+                    startGame(currentLevel + 1);
+                } else {
+                    // 全部通关
+                    document.getElementById('winStats').innerHTML = `<div class="stats-title">🎉 All Levels Complete!</div><div class="stat-row"><span>Total Words Learned</span><span>${Object.keys(progress.learnedWords).length}</span></div>`;
+                    showScreen('win-screen');
+                }
+            }, 2000);
+        }
+
+        function updateProgress() {
+            const total = isReviewMode ? 6 : vocabulary[currentLevel].items.length;
+            const found = foundItems.length;
+            document.getElementById('progressFill').style.width = (found / total * 100) + '%';
+            document.getElementById('progressText').textContent = found + ' / ' + total;
+            
+            // 渲染目标单词列表
+            if (!isReviewMode) {
+                const targetList = document.getElementById('targetList');
+                const targets = vocabulary[currentLevel].items;
+                targetList.innerHTML = targets.map((item, i) => {
+                    const isFound = foundItems.includes(item.word.toLowerCase());
+                    const isCurrent = i === currentIndex;
+                    return `<div class="target-item ${isFound ? 'found' : ''} ${isCurrent ? 'current' : ''}">${item.emoji} ${item.word}</div>`;
+                }).join('');
+                
+                if (currentIndex < targets.length) {
+                    const target = targets[currentIndex];
+                    document.getElementById('targetEmoji').textContent = target.emoji;
+                    document.getElementById('targetWord').textContent = target.word;
+                }
+            }
+        }
+
+        function showFeedback(message, type) { const fb = document.getElementById('feedback'); fb.textContent = message; fb.className = 'feedback ' + type; fb.style.display = 'block'; setTimeout(() => fb.style.display = 'none', 2000); }
+
+        function speakCurrentWord() {
+            if (isReviewMode && foundItems.length < 6) speakWord(gameItems[foundItems.length].word, false);
+            else if (!isReviewMode && currentIndex < vocabulary[currentLevel].items.length) speakWord(vocabulary[currentLevel].items[currentIndex].word, false);
+        }
+
+        function speakWord(text, success) {
+            const btn = document.getElementById('speakBtn'); btn.classList.add('speaking');
+            const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.75;
+            utterance.onend = () => { btn.classList.remove('speaking'); if (success && !isReviewMode) setTimeout(() => { if (currentIndex < vocabulary[currentLevel].items.length) speakCurrentWord(); }, 1000); };
+            synth.speak(utterance);
+        }
+
+        function speakError(wrong, right) {
+            const btn = document.getElementById('speakBtn'); btn.classList.add('speaking');
+            const utterance = new SpeechSynthesisUtterance('This is ' + wrong + '. Find ' + right + '!'); utterance.lang = 'en-US'; utterance.rate = 0.7;
+            utterance.onend = () => btn.classList.remove('speaking');
+            synth.speak(utterance);
+        }
+
+        // Event listeners
+        document.getElementById('btn-start').onclick = showLevelSelect;
+        document.getElementById('btn-review').onclick = showReview;
+        document.getElementById('btn-stats').onclick = showStats;
+        document.getElementById('btn-back').onclick = () => showScreen('start-screen');
+        document.getElementById('btn-back-stats').onclick = () => showScreen('start-screen');
+        document.getElementById('btn-next').onclick = showLevelSelect;
+        document.getElementById('btn-home').onclick = () => showScreen('start-screen');
+        document.getElementById('speakBtn').onclick = speakCurrentWord;
+    </script>
+</body>
+</html>
