@@ -109,55 +109,66 @@
     <div class="feedback" id="feedback"></div>
 
     <script>
-        // Vocabulary data - 儿童英语词汇
+        // Vocabulary data - 儿童英语词汇，越往后单词越多
         const vocabulary = {
             1: { name: 'Colors 颜色', items: [
+                { emoji: '🔴', word: 'red' }, { emoji: '🔵', word: 'blue' }, { emoji: '🟡', word: 'yellow' }
+            ]},
+            2: { name: 'Colors 颜色', items: [
                 { emoji: '🔴', word: 'red' }, { emoji: '🔵', word: 'blue' }, { emoji: '🟡', word: 'yellow' },
                 { emoji: '🟢', word: 'green' }, { emoji: '🟠', word: 'orange' }, { emoji: '🟣', word: 'purple' }
             ]},
-            2: { name: 'Fruits 水果', items: [
+            3: { name: 'Fruits 水果', items: [
                 { emoji: '🍎', word: 'apple' }, { emoji: '🍌', word: 'banana' }, { emoji: '🍊', word: 'orange' },
                 { emoji: '🍇', word: 'grape' }, { emoji: '🍓', word: 'strawberry' }, { emoji: '🍉', word: 'watermelon' }
             ]},
-            3: { name: 'Farm Animals 农场动物', items: [
+            4: { name: 'Fruits 水果', items: [
+                { emoji: '🍎', word: 'apple' }, { emoji: '🍌', word: 'banana' }, { emoji: '🍊', word: 'orange' },
+                { emoji: '🍇', word: 'grape' }, { emoji: '🍓', word: 'strawberry' }, { emoji: '🍉', word: 'watermelon' },
+                { emoji: '🍍', word: 'pineapple' }, { emoji: '🥝', word: 'kiwi' }
+            ]},
+            5: { name: 'Farm Animals 农场动物', items: [
                 { emoji: '🐄', word: 'cow' }, { emoji: '🐷', word: 'pig' }, { emoji: '🐔', word: 'chicken' },
-                { emoji: '🐴', word: 'horse' }, { emoji: '🐑', word: 'sheep' }, { emoji: '🦆', word: 'duck' }
+                { emoji: '🐴', word: 'horse' }, { emoji: '🐑', word: 'sheep' }, { emoji: '🦆', word: 'duck' },
+                { emoji: '🐐', word: 'goat' }, { emoji: '🐃', word: 'buffalo' }
             ]},
-            4: { name: 'Wild Animals 野生动物', items: [
+            6: { name: 'Farm Animals 农场动物', items: [
+                { emoji: '🐄', word: 'cow' }, { emoji: '🐷', word: 'pig' }, { emoji: '🐔', word: 'chicken' },
+                { emoji: '🐴', word: 'horse' }, { emoji: '🐑', word: 'sheep' }, { emoji: '🦆', word: 'duck' },
+                { emoji: '🐐', word: 'goat' }, { emoji: '🐃', word: 'buffalo' }, { emoji: '🐂', word: 'ox' }, { emoji: '🐁', word: 'mouse' }
+            ]},
+            7: { name: 'Wild Animals 野生动物', items: [
                 { emoji: '🦁', word: 'lion' }, { emoji: '🐘', word: 'elephant' }, { emoji: '🦒', word: 'giraffe' },
-                { emoji: '🐼', word: 'panda' }, { emoji: '🐵', word: 'monkey' }, { emoji: '🐯', word: 'tiger' }
+                { emoji: '🐼', word: 'panda' }, { emoji: '🐵', word: 'monkey' }, { emoji: '🐯', word: 'tiger' },
+                { emoji: '🦓', word: 'zebra' }, { emoji: '🦍', word: 'gorilla' }, { emoji: '🐍', word: 'snake' }, { emoji: '🐆', word: 'leopard' }
             ]},
-            5: { name: 'Pets 宠物', items: [
+            8: { name: 'Wild Animals 野生动物', items: [
+                { emoji: '🦁', word: 'lion' }, { emoji: '🐘', word: 'elephant' }, { emoji: '🦒', word: 'giraffe' },
+                { emoji: '🐼', word: 'panda' }, { emoji: '🐵', word: 'monkey' }, { emoji: '🐯', word: 'tiger' },
+                { emoji: '🦓', word: 'zebra' }, { emoji: '🦍', word: 'gorilla' }, { emoji: '🐍', word: 'snake' }, { emoji: '🐆', word: 'leopard' },
+                { emoji: '🦛', word: 'hippo' }, { emoji: '🦏', word: 'rhino' }
+            ]},
+            9: { name: 'Pets 宠物', items: [
                 { emoji: '🐕', word: 'dog' }, { emoji: '🐱', word: 'cat' }, { emoji: '🐰', word: 'rabbit' },
-                { emoji: '🐦', word: 'bird' }, { emoji: '🐠', word: 'fish' }, { emoji: '🐢', word: 'turtle' }
+                { emoji: '🐦', word: 'bird' }, { emoji: '🐠', word: 'fish' }, { emoji: '🐢', word: 'turtle' },
+                { emoji: '🐹', word: 'hamster' }, { emoji: '🦜', word: 'parrot' }, { emoji: '🐌', word: 'snail' }, { emoji: '🐕‍🦺', word: 'guide dog' }
             ]},
-            6: { name: 'Toys 玩具', items: [
-                { emoji: '⚽', word: 'ball' }, { emoji: '🧸', word: 'teddy' }, { emoji: '🚗', word: 'car' },
-                { emoji: '🎨', word: 'crayon' }, { emoji: '🧩', word: 'puzzle' }, { emoji: '🎈', word: 'balloon' }
+            10: { name: 'Pets 宠物', items: [
+                { emoji: '🐕', word: 'dog' }, { emoji: '🐱', word: 'cat' }, { emoji: '🐰', word: 'rabbit' },
+                { emoji: '🐦', word: 'bird' }, { emoji: '🐠', word: 'fish' }, { emoji: '🐢', word: 'turtle' },
+                { emoji: '🐹', word: 'hamster' }, { emoji: '🦜', word: 'parrot' }, { emoji: '🐌', word: 'snail' }, { emoji: '🐕‍🦺', word: 'guide dog' },
+                { emoji: '🦮', word: 'service dog' }, { emoji: '🐩', word: 'poodle' }
             ]},
-            7: { name: 'Food 食物', items: [
-                { emoji: '🥛', word: 'milk' }, { emoji: '🥚', word: 'egg' }, { emoji: '🍞', word: 'bread' },
-                { emoji: '🍪', word: 'cookie' }, { emoji: '🧀', word: 'cheese' }, { emoji: '🍟', word: 'fries' }
-            ]},
-            8: { name: 'Nature 自然', items: [
-                { emoji: '☀️', word: 'sun' }, { emoji: '🌙', word: 'moon' }, { emoji: '⭐', word: 'star' },
-                { emoji: '☁️', word: 'cloud' }, { emoji: '🌧️', word: 'rain' }, { emoji: '🌸', word: 'flower' }
-            ]},
-            9: { name: 'Body 身体', items: [
-                { emoji: '👤', word: 'head' }, { emoji: '👀', word: 'eye' }, { emoji: '👃', word: 'nose' },
-                { emoji: '👄', word: 'mouth' }, { emoji: '✋', word: 'hand' }, { emoji: '🦶', word: 'foot' }
-            ]},
-            10: { name: 'Home 家', items: [
-                { emoji: '🏠', word: 'house' }, { emoji: '🚪', word: 'door' }, { emoji: '🪟', word: 'window' },
-                { emoji: '🪑', word: 'chair' }, { emoji: '🛏️', word: 'bed' }, { emoji: '🕰️', word: 'clock' }
-            ]},
-            11: { name: 'Actions 动作', items: [
-                { emoji: '🏃', word: 'run' }, { emoji: '🦘', word: 'jump' }, { emoji: '🧘', word: 'sit' },
-                { emoji: '🚶', word: 'walk' }, { emoji: '👋', word: 'wave' }, { emoji: '👏', word: 'clap' }
+            11: { name: 'Sea Animals 海洋动物', items: [
+                { emoji: '🐳', word: 'whale' }, { emoji: '🐬', word: 'dolphin' }, { emoji: '🦀', word: 'crab' },
+                { emoji: '🦞', word: 'lobster' }, { emoji: '🐙', word: 'octopus' }, { emoji: '🦈', word: 'shark' },
+                { emoji: '🐢', word: 'turtle' }, { emoji: '🐡', word: 'blowfish' }, { emoji: '🐟', word: 'fish' }, { emoji: '🐠', word: 'tropical fish' }
             ]},
             12: { name: 'Sea Animals 海洋动物', items: [
                 { emoji: '🐳', word: 'whale' }, { emoji: '🐬', word: 'dolphin' }, { emoji: '🦀', word: 'crab' },
-                { emoji: '🦞', word: 'lobster' }, { emoji: '🐙', word: 'octopus' }, { emoji: '🦈', word: 'shark' }
+                { emoji: '🦞', word: 'lobster' }, { emoji: '🐙', word: 'octopus' }, { emoji: '🦈', word: 'shark' },
+                { emoji: '🐢', word: 'turtle' }, { emoji: '🐡', word: 'blowfish' }, { emoji: '🐟', word: 'fish' }, { emoji: '🐠', word: 'tropical fish' },
+                { emoji: '🐴', word: 'seahorse' }, { emoji: '🦑', word: 'squid' }
             ]}
         };
 
@@ -187,18 +198,14 @@
         }
 
         function showLevelSelect() {
-            const progress = loadProgress();
-            console.log('Loaded progress, unlockedLevel:', progress.unlockedLevel);
             const grid = document.getElementById('levelGrid');
             grid.innerHTML = '';
             Object.keys(vocabulary).forEach(level => {
                 const levelData = vocabulary[level];
-                const isUnlocked = level <= progress.unlockedLevel;
-                const isCompleted = level < progress.unlockedLevel;
                 const card = document.createElement('div');
-                card.className = 'level-card ' + (isUnlocked ? '' : 'locked ') + (isCompleted ? 'completed' : '') + (level == progress.unlockedLevel ? ' current' : '');
+                card.className = 'level-card';
                 card.innerHTML = `<div class="level-number">Level ${level}</div><div class="level-name">${levelData.name}</div><div class="level-words">${levelData.items.length} words</div>`;
-                if (isUnlocked) card.onclick = () => startGame(parseInt(level));
+                card.onclick = () => startGame(parseInt(level));
                 grid.appendChild(card);
             });
             showScreen('level-screen');
@@ -306,23 +313,13 @@
         function levelComplete() {
             const progress = loadProgress();
             vocabulary[currentLevel].items.forEach(item => { if (!progress.learnedWords[item.word]) progress.learnedWords[item.word] = { level: 1, nextReview: Date.now() + 24 * 60 * 60 * 1000 }; });
-            if (currentLevel >= progress.unlockedLevel && currentLevel < Object.keys(vocabulary).length) {
-                progress.unlockedLevel = currentLevel + 1;
-                console.log('Level completed, new unlockedLevel:', progress.unlockedLevel);
-            }
             saveProgress(progress);
             
             showFeedback('Level Complete!', 'success');
             
-            // 自动进入下一关
+            // 返回关卡选择
             setTimeout(() => {
-                if (currentLevel < Object.keys(vocabulary).length) {
-                    startGame(currentLevel + 1);
-                } else {
-                    // 全部通关
-                    document.getElementById('winStats').innerHTML = `<div class="stats-title">🎉 All Levels Complete!</div><div class="stat-row"><span>Total Words Learned</span><span>${Object.keys(progress.learnedWords).length}</span></div>`;
-                    showScreen('win-screen');
-                }
+                showLevelSelect();
             }, 2000);
         }
 
