@@ -194,7 +194,7 @@
         <button onclick="startGame()">再来一局</button>
     </div>
     
-    <div id="instructions">滑动鼠标切割水果 · 炸弹会扣命 · 漏掉3个水果游戏结束</div>
+    <div id="instructions">滑动鼠标/手指切割水果 · 炸弹会扣命 · 漏掉3个水果游戏结束</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -315,6 +315,39 @@
             isSlicing = false;
             sliceTrail = [];
         });
+
+        // 触摸事件支持移动端
+        canvas.addEventListener('touchstart', (e) => {
+            if (!gameRunning) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            prevMouseX = mouseX;
+            prevMouseY = mouseY;
+            mouseX = touch.clientX;
+            mouseY = touch.clientY;
+            isSlicing = true;
+            sliceTrail.push({ x: mouseX, y: mouseY, age: 0 });
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (!gameRunning) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            prevMouseX = mouseX;
+            prevMouseY = mouseY;
+            mouseX = touch.clientX;
+            mouseY = touch.clientY;
+            isSlicing = true;
+            sliceTrail.push({ x: mouseX, y: mouseY, age: 0 });
+            if (sliceTrail.length > 20) sliceTrail.shift();
+            checkSlice();
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isSlicing = false;
+            sliceTrail = [];
+        }, { passive: false });
         
         // 切割检测
         function checkSlice() {
