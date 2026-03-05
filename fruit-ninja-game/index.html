@@ -573,12 +573,12 @@
             // 清空画布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 生成水果
-            if (timestamp - lastSpawnTime > spawnInterval) {
+            // 生成水果 - 确保至少有一些水果
+            if (timestamp - lastSpawnTime > spawnInterval || fruits.length === 0) {
                 spawnMultipleFruits();
                 lastSpawnTime = timestamp;
-                // 逐渐增加难度
-                spawnInterval = Math.max(400, spawnInterval - 5);
+                // 逐渐增加难度，但不会太快
+                spawnInterval = Math.max(500, spawnInterval - 2);
             }
             
             // 更新和绘制水果
