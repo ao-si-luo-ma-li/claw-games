@@ -399,9 +399,9 @@
         function spawnFruit() {
             const isBomb = Math.random() < 0.12; // 12%几率生成炸弹
             
-            // 随机初始垂直速度 - 确保水果能飞到至少半屏高度
-            const minVy = 16; // 向上飞的速度
-            const maxVy = 22;
+            // 随机初始垂直速度 - 调整到合适的高度和速度
+            const minVy = 10; // 较小速度，飞得低一些
+            const maxVy = 14; // 较小速度
             const baseVy = -(Math.random() * (maxVy - minVy) + minVy);
             
             // 左右边距留出80px
@@ -542,7 +542,7 @@
                 // 物理更新
                 fruit.x += fruit.vx;
                 fruit.y += fruit.vy;
-                fruit.vy += 0.15; // 重力
+                fruit.vy += 0.08; // 减小重力，下落更慢
                 fruit.rotation += fruit.rotationSpeed;
                 fruit.size += (fruit.targetSize - fruit.size) * 0.1;
                 
