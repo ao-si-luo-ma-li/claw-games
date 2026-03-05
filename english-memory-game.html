@@ -78,6 +78,7 @@
     </div>
 
     <div id="game-screen" class="screen">
+        <button class="back-btn" id="btn-back-game" style="position:fixed;top:15px;left:15px;z-index:100;padding:10px 20px;font-size:16px;">← Back</button>
         <div class="game-header">
             <div class="level-badge" id="levelBadge">Level 1</div>
             <button class="speak-btn" id="speakBtn">🔊</button>
@@ -380,6 +381,7 @@
         document.getElementById('btn-review').onclick = showReview;
         document.getElementById('btn-stats').onclick = showStats;
         document.getElementById('btn-back').onclick = () => showScreen('start-screen');
+        document.getElementById('btn-back-game').onclick = () => { gameRunning = false; showLevelSelect(); };
         document.getElementById('btn-back-stats').onclick = () => showScreen('start-screen');
         document.getElementById('btn-next').onclick = showLevelSelect;
         document.getElementById('btn-home').onclick = () => showScreen('start-screen');
