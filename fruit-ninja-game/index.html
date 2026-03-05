@@ -329,10 +329,10 @@
                     fruit.x, fruit.y, fruit.size
                 )) {
                     if (fruit.isBomb) {
-                        // 切到炸弹 - 扣分
+                        // 切到炸弹 - 扣分，红色爆炸效果
                         score = Math.max(0, score - 50);
                         updateScore();
-                        createExplosion(fruit.x, fruit.y, '#2d3436');
+                        createExplosion(fruit.x, fruit.y, '#ff0000');
                         playBombSound();
                         fruits.splice(i, 1);
                         combo = 0;
@@ -431,7 +431,7 @@
         
         // 一次生成多个水果
         function spawnMultipleFruits() {
-            const count = Math.floor(Math.random() * 3) + 1; // 1-3个水果
+            const count = Math.floor(Math.random() * 2) + 1; // 1-2个水果，减少数量
             for (let i = 0; i < count; i++) {
                 spawnFruit();
             }
@@ -527,12 +527,12 @@
             // 清空画布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 生成水果 - 确保一直有水果
-            if (!lastSpawnTime || timestamp - lastSpawnTime > spawnInterval || fruits.length < 2) {
+            // 生成水果 - 确保一直有水果，但不要太多
+            if (!lastSpawnTime || timestamp - lastSpawnTime > spawnInterval || fruits.length < 1) {
                 spawnMultipleFruits();
                 lastSpawnTime = timestamp;
                 // 逐渐增加难度，但有下限
-                spawnInterval = Math.max(500, spawnInterval - 5);
+                spawnInterval = Math.max(800, spawnInterval - 5);
             }
             
             // 更新和绘制水果
