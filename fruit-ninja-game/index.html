@@ -400,10 +400,8 @@
             const isBomb = Math.random() < 0.12; // 12%几率生成炸弹
             
             // 随机初始垂直速度 - 确保水果能飞到至少半屏高度
-            // 屏幕越高需要的速度越大，假设半屏需要约500px高度
-            // h = vy^2 / (2g), g=0.15, 要达到500px需要 vy^2 = 150, vy ≈ -12.2
-            const minVy = -16; // 最小速度，确保能飞很高
-            const maxVy = -22; // 最大速度，确保不会飞太高
+            const minVy = 16; // 向上飞的速度
+            const maxVy = 22;
             const baseVy = -(Math.random() * (maxVy - minVy) + minVy);
             
             // 左右边距留出80px
