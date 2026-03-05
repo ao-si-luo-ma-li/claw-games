@@ -529,12 +529,12 @@
             // 清空画布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 生成水果 - 每隔一段时间生成，或者水果太少时生成
-            if (!lastSpawnTime || timestamp - lastSpawnTime > spawnInterval) {
+            // 生成水果 - 确保一直有水果
+            if (!lastSpawnTime || timestamp - lastSpawnTime > spawnInterval || fruits.length < 2) {
                 spawnMultipleFruits();
                 lastSpawnTime = timestamp;
                 // 逐渐增加难度，但有下限
-                spawnInterval = Math.max(600, spawnInterval - 10);
+                spawnInterval = Math.max(500, spawnInterval - 5);
             }
             
             // 更新和绘制水果
@@ -674,7 +674,6 @@
             initAudio();
             gameRunning = true;
             score = 0;
-            lives = 3;
             combo = 0;
             fruits = [];
             particles = [];
