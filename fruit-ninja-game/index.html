@@ -133,28 +133,6 @@
             opacity: 1;
         }
         
-        .lives {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-        }
-        
-        .life {
-            width: 30px;
-            height: 30px;
-            background: #ff6b6b;
-            border-radius: 50%;
-            box-shadow: 0 4px 10px rgba(255,107,107,0.5);
-        }
-        
-        .life.lost {
-            background: #555;
-            box-shadow: none;
-        }
-        
         #instructions {
             position: fixed;
             bottom: 20px;
@@ -174,12 +152,6 @@
     
     <div class="timer" id="timer">60</div>
     
-    <div class="lives" id="lives">
-        <div class="life"></div>
-        <div class="life"></div>
-        <div class="life"></div>
-    </div>
-    
     <div class="combo" id="combo">连击 x<span id="comboValue">0</span></div>
     
     <div id="startScreen">
@@ -194,7 +166,7 @@
         <button onclick="startGame()">再来一局</button>
     </div>
     
-    <div id="instructions">滑动鼠标/手指切割水果 · 炸弹会扣命 · 漏掉3个水果游戏结束</div>
+    <div id="instructions">滑动鼠标/手指切割水果 · 炸弹会扣分</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -211,7 +183,6 @@
         // 游戏状态
         let gameRunning = false;
         let score = 0;
-        let lives = 3;
         let combo = 0;
         let fruits = [];
         let particles = [];
@@ -358,18 +329,14 @@
                     fruit.x, fruit.y, fruit.size
                 )) {
                     if (fruit.isBomb) {
-                        // 切到炸弹
-                        lives--;
-                        updateLives();
+                        // 切到炸弹 - 扣分
+                        score = Math.max(0, score - 50);
+                        updateScore();
                         createExplosion(fruit.x, fruit.y, '#2d3436');
                         playBombSound();
                         fruits.splice(i, 1);
                         combo = 0;
                         updateCombo();
-                        
-                        if (lives <= 0) {
-                            gameOver();
-                        }
                     } else {
                         // 切到水果
                         fruit.sliced = true;
@@ -555,17 +522,6 @@
             }
         }
         
-        // 更新生命值
-        function updateLives() {
-            const livesEl = document.getElementById('lives');
-            const lifeElements = livesEl.querySelectorAll('.life');
-            lifeElements.forEach((el, i) => {
-                if (i >= lives) {
-                    el.classList.add('lost');
-                }
-            });
-        }
-        
         // 游戏循环
         function gameLoop(timestamp) {
             if (!gameRunning) return;
@@ -573,12 +529,12 @@
             // 清空画布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 生成水果 - 确保至少有一些水果
-            if (timestamp - lastSpawnTime > spawnInterval || fruits.length === 0) {
+            // 生成水果 - 每隔一段时间生成，或者水果太少时生成
+            if (!lastSpawnTime || timestamp - lastSpawnTime > spawnInterval) {
                 spawnMultipleFruits();
                 lastSpawnTime = timestamp;
-                // 逐渐增加难度，但不会太快
-                spawnInterval = Math.max(500, spawnInterval - 2);
+                // 逐渐增加难度，但有下限
+                spawnInterval = Math.max(600, spawnInterval - 10);
             }
             
             // 更新和绘制水果
@@ -588,20 +544,15 @@
                 // 物理更新
                 fruit.x += fruit.vx;
                 fruit.y += fruit.vy;
-                fruit.vy += 0.15; // 重力调小，下落更慢
+                fruit.vy += 0.15; // 重力
                 fruit.rotation += fruit.rotationSpeed;
                 fruit.size += (fruit.targetSize - fruit.size) * 0.1;
                 
                 // 绘制水果
                 drawFruit(fruit);
                 
-                // 只在水果完全掉出屏幕时才移除
-                // 未切开的正常水果落到底部时重置连击
+                // 水果掉出屏幕时移除
                 if (fruit.y > canvas.height + 100) {
-                    if (!fruit.isHalf && !fruit.isBomb) {
-                        combo = 0;
-                        updateCombo();
-                    }
                     fruits.splice(i, 1);
                     continue;
                 }
@@ -735,10 +686,6 @@
             updateScore();
             updateCombo();
             updateTimer();
-            
-            // 重置生命值显示
-            const livesEl = document.getElementById('lives');
-            livesEl.innerHTML = '<div class="life"></div><div class="life"></div><div class="life"></div>';
             
             document.getElementById('startScreen').style.display = 'none';
             document.getElementById('gameOverScreen').style.display = 'none';
