@@ -399,9 +399,9 @@
         function spawnFruit() {
             const isBomb = Math.random() < 0.12; // 12%几率生成炸弹
             
-            // 随机初始垂直速度 - 调整到合适的高度和速度
-            const minVy = 10; // 较小速度，飞得低一些
-            const maxVy = 14; // 较小速度
+            // 随机初始垂直速度 - 调整到屏幕内
+            const minVy = 8; // 较小速度
+            const maxVy = 11; 
             const baseVy = -(Math.random() * (maxVy - minVy) + minVy);
             
             // 左右边距留出80px
