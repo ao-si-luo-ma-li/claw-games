@@ -109,47 +109,55 @@
     <div class="feedback" id="feedback"></div>
 
     <script>
-        // Vocabulary data
+        // Vocabulary data - 儿童英语词汇
         const vocabulary = {
-            1: { name: 'Colors', items: [
+            1: { name: 'Colors 颜色', items: [
                 { emoji: '🔴', word: 'red' }, { emoji: '🔵', word: 'blue' }, { emoji: '🟡', word: 'yellow' },
                 { emoji: '🟢', word: 'green' }, { emoji: '🟠', word: 'orange' }, { emoji: '🟣', word: 'purple' }
             ]},
-            2: { name: 'Fruits', items: [
+            2: { name: 'Fruits 水果', items: [
                 { emoji: '🍎', word: 'apple' }, { emoji: '🍌', word: 'banana' }, { emoji: '🍊', word: 'orange' },
                 { emoji: '🍇', word: 'grape' }, { emoji: '🍓', word: 'strawberry' }, { emoji: '🍉', word: 'watermelon' }
             ]},
-            3: { name: 'Animals', items: [
-                { emoji: '🐕', word: 'dog' }, { emoji: '🐱', word: 'cat' }, { emoji: '🐰', word: 'rabbit' },
-                { emoji: '🐼', word: 'panda' }, { emoji: '🦁', word: 'lion' }, { emoji: '🐘', word: 'elephant' }
+            3: { name: 'Farm Animals 农场动物', items: [
+                { emoji: '🐄', word: 'cow' }, { emoji: '🐷', word: 'pig' }, { emoji: '🐔', word: 'chicken' },
+                { emoji: '🐴', word: 'horse' }, { emoji: '🐑', word: 'sheep' }, { emoji: '🦆', word: 'duck' }
             ]},
-            4: { name: 'Toys', items: [
+            4: { name: 'Wild Animals 野生动物', items: [
+                { emoji: '🦁', word: 'lion' }, { emoji: '🐘', word: 'elephant' }, { emoji: '🦒', word: 'giraffe' },
+                { emoji: '🐼', word: 'panda' }, { emoji: '🐵', word: 'monkey' }, { emoji: '🐯', word: 'tiger' }
+            ]},
+            5: { name: 'Pets 宠物', items: [
+                { emoji: '🐕', word: 'dog' }, { emoji: '🐱', word: 'cat' }, { emoji: '🐰', word: 'rabbit' },
+                { emoji: '🐦', word: 'bird' }, { emoji: '🐠', word: 'fish' }, { emoji: '🐢', word: 'turtle' }
+            ]},
+            6: { name: 'Toys 玩具', items: [
                 { emoji: '⚽', word: 'ball' }, { emoji: '🧸', word: 'teddy' }, { emoji: '🚗', word: 'car' },
                 { emoji: '🎨', word: 'crayon' }, { emoji: '🧩', word: 'puzzle' }, { emoji: '🎈', word: 'balloon' }
             ]},
-            5: { name: 'Food', items: [
+            7: { name: 'Food 食物', items: [
                 { emoji: '🥛', word: 'milk' }, { emoji: '🥚', word: 'egg' }, { emoji: '🍞', word: 'bread' },
-                { emoji: '🍰', word: 'cake' }, { emoji: '🍦', word: 'ice cream' }, { emoji: '🍕', word: 'pizza' }
+                { emoji: '🍪', word: 'cookie' }, { emoji: '🧀', word: 'cheese' }, { emoji: '🍟', word: 'fries' }
             ]},
-            6: { name: 'Nature', items: [
+            8: { name: 'Nature 自然', items: [
                 { emoji: '☀️', word: 'sun' }, { emoji: '🌙', word: 'moon' }, { emoji: '⭐', word: 'star' },
                 { emoji: '☁️', word: 'cloud' }, { emoji: '🌧️', word: 'rain' }, { emoji: '🌸', word: 'flower' }
             ]},
-            7: { name: 'Body', items: [
+            9: { name: 'Body 身体', items: [
                 { emoji: '👤', word: 'head' }, { emoji: '👀', word: 'eye' }, { emoji: '👃', word: 'nose' },
                 { emoji: '👄', word: 'mouth' }, { emoji: '✋', word: 'hand' }, { emoji: '🦶', word: 'foot' }
             ]},
-            8: { name: 'Home', items: [
+            10: { name: 'Home 家', items: [
                 { emoji: '🏠', word: 'house' }, { emoji: '🚪', word: 'door' }, { emoji: '🪟', word: 'window' },
                 { emoji: '🪑', word: 'chair' }, { emoji: '🛏️', word: 'bed' }, { emoji: '🕰️', word: 'clock' }
             ]},
-            9: { name: 'Actions', items: [
-                { emoji: '🍽️', word: 'eat' }, { emoji: '🥤', word: 'drink' }, { emoji: '🏃', word: 'run' },
-                { emoji: '🦘', word: 'jump' }, { emoji: '🧘', word: 'sit' }, { emoji: '🚶', word: 'walk' }
+            11: { name: 'Actions 动作', items: [
+                { emoji: '🏃', word: 'run' }, { emoji: '🦘', word: 'jump' }, { emoji: '🧘', word: 'sit' },
+                { emoji: '🚶', word: 'walk' }, { emoji: '👋', word: 'wave' }, { emoji: '👏', word: 'clap' }
             ]},
-            10: { name: 'Phrases', items: [
-                { emoji: '❤️', word: 'I love you' }, { emoji: '🙏', word: 'thank you' }, { emoji: '🌞', word: 'good morning' },
-                { emoji: '😊', word: 'how are you' }, { emoji: '🙂', word: 'I am happy' }, { emoji: '❓', word: 'what is this' }
+            12: { name: 'Sea Animals 海洋动物', items: [
+                { emoji: '🐳', word: 'whale' }, { emoji: '🐬', word: 'dolphin' }, { emoji: '🦀', word: 'crab' },
+                { emoji: '🦞', word: 'lobster' }, { emoji: '🐙', word: 'octopus' }, { emoji: '🦈', word: 'shark' }
             ]}
         };
 
@@ -225,14 +233,13 @@
         function startGame(level) {
             isReviewMode = false; currentLevel = level;
             const levelData = vocabulary[level];
-            const correctItems = [...levelData.items];
-            const allItems = Object.values(vocabulary).flatMap(l => l.items);
-            const fillers = allItems.filter(i => !correctItems.find(c => c.word === i.word)).sort(() => Math.random() - 0.5).slice(0, levelData.items.length);
-            gameItems = [...correctItems, ...fillers].sort(() => Math.random() - 0.5);
+            // 只使用要学习的单词，卡片数量等于单词数量（每个单词1张卡）
+            // 找到对应的emoji即可
+            gameItems = [...levelData.items].sort(() => Math.random() - 0.5);
             currentIndex = 0; foundItems = []; canFlip = true;
             document.getElementById('levelBadge').textContent = 'Level ' + level;
             renderCards(); updateProgress(); showScreen('game-screen');
-            setTimeout(speakCurrentWord, 500);
+            setTimeout(speakCurrentWord, 1000);
         }
 
         function renderCards() {
@@ -252,23 +259,35 @@
             card.classList.add('flipped');
             const flippedItem = gameItems[index];
             const targetItem = isReviewMode ? gameItems[foundItems.length] : vocabulary[currentLevel].items[currentIndex];
+            
+            // 检查翻到的卡片是否是要找的单词
             if (flippedItem.word.toLowerCase() === targetItem.word.toLowerCase()) {
-                showFeedback('Great!', 'success');
+                showFeedback('Great! ' + flippedItem.word + '!', 'success');
                 card.classList.add('matched');
                 if (isReviewMode) updateWordProgress(flippedItem.word, true);
                 foundItems.push(flippedItem.word.toLowerCase());
                 if (!isReviewMode) currentIndex++;
                 speakWord(flippedItem.word, true);
                 updateProgress();
-                if (!isReviewMode && foundItems.length >= vocabulary[currentLevel].items.length) { setTimeout(() => levelComplete(), 1500); }
-                else if (isReviewMode && foundItems.length >= 6) { setTimeout(() => showScreen('start-screen'), 1500); }
-                else { canFlip = false; setTimeout(() => { canFlip = true; if (!isReviewMode) speakCurrentWord(); }, 2000); }
+                
+                // 检查是否完成
+                if (!isReviewMode && foundItems.length >= vocabulary[currentLevel].items.length) {
+                    setTimeout(() => levelComplete(), 1500);
+                } else if (isReviewMode && foundItems.length >= Math.min(6, gameItems.length)) {
+                    setTimeout(() => showScreen('start-screen'), 1500);
+                } else {
+                    canFlip = false;
+                    setTimeout(() => {
+                        canFlip = true;
+                        if (!isReviewMode) speakCurrentWord();
+                    }, 2500);
+                }
             } else {
-                showFeedback('Try again!', 'error');
-                speakError(flippedItem.word, targetItem.word);
+                showFeedback('This is ' + flippedItem.word + '!', 'error');
+                speakError(flippedItem.word);
                 if (isReviewMode) updateWordProgress(flippedItem.word, false);
                 canFlip = false;
-                setTimeout(() => { card.classList.remove('flipped'); canFlip = true; }, 2000);
+                setTimeout(() => { card.classList.remove('flipped'); canFlip = true; }, 2500);
             }
         }
 
@@ -340,14 +359,21 @@
 
         function speakWord(text, success) {
             const btn = document.getElementById('speakBtn'); btn.classList.add('speaking');
-            const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.75;
-            utterance.onend = () => { btn.classList.remove('speaking'); if (success && !isReviewMode) setTimeout(() => { if (currentIndex < vocabulary[currentLevel].items.length) speakCurrentWord(); }, 1000); };
+            const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = 0.4; utterance.pitch = 1.2;
+            utterance.onend = () => { 
+                btn.classList.remove('speaking'); 
+                if (success && !isReviewMode) {
+                    setTimeout(() => { 
+                        if (currentIndex < vocabulary[currentLevel].items.length) speakCurrentWord(); 
+                    }, 1500); 
+                }
+            };
             synth.speak(utterance);
         }
 
-        function speakError(wrong, right) {
+        function speakError(wrong) {
             const btn = document.getElementById('speakBtn'); btn.classList.add('speaking');
-            const utterance = new SpeechSynthesisUtterance('This is ' + wrong + '. Find ' + right + '!'); utterance.lang = 'en-US'; utterance.rate = 0.7;
+            const utterance = new SpeechSynthesisUtterance(wrong); utterance.lang = 'en-US'; utterance.rate = 0.4; utterance.pitch = 1.2;
             utterance.onend = () => btn.classList.remove('speaking');
             synth.speak(utterance);
         }
