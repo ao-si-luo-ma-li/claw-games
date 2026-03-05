@@ -397,7 +397,7 @@
                         
                         // 创建切割效果
                         createSliceEffect(fruit);
-                        createParticles(fruit.x, fruit.y, fruit.innerColor);
+                        createParticles(fruit.x, fruit.y, fruit.type.innerColor);
                         
                         // 移除水果
                         fruits.splice(i, 1);
@@ -432,9 +432,12 @@
         function spawnFruit() {
             const isBomb = Math.random() < 0.12; // 12%几率生成炸弹
             
-            // 随机初始垂直速度 - 有快有慢，范围大 (6-16)
-            // 速度6飞得最高，16飞得最低
-            const baseVy = -(Math.random() * 10 + 6);
+            // 随机初始垂直速度 - 确保水果能飞到至少半屏高度
+            // 屏幕越高需要的速度越大，假设半屏需要约500px高度
+            // h = vy^2 / (2g), g=0.15, 要达到500px需要 vy^2 = 150, vy ≈ -12.2
+            const minVy = -16; // 最小速度，确保能飞很高
+            const maxVy = -22; // 最大速度，确保不会飞太高
+            const baseVy = -(Math.random() * (maxVy - minVy) + minVy);
             
             // 左右边距留出80px
             const margin = 80;
@@ -592,21 +595,15 @@
                 // 绘制水果
                 drawFruit(fruit);
                 
-                // 水果最低不能低于屏幕一半高度（只在下落时检查）
-                const minHeight = canvas.height / 2;
-                if (fruit.vy > 0 && fruit.y > minHeight) {
-                    // 水果正在下落且超过最低高度
+                // 只在水果完全掉出屏幕时才移除
+                // 未切开的正常水果落到底部时重置连击
+                if (fruit.y > canvas.height + 100) {
                     if (!fruit.isHalf && !fruit.isBomb) {
                         combo = 0;
                         updateCombo();
                     }
                     fruits.splice(i, 1);
                     continue;
-                }
-                
-                // 检查是否掉出屏幕（仅对半切水果和炸弹）
-                if (fruit.y > canvas.height + 100) {
-                    fruits.splice(i, 1);
                 }
             }
             
